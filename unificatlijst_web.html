@@ -6,6 +6,7 @@
   <title>UniFi Categorie Browser</title>
   <style>
     :root {
+      color-scheme: light;
       --bg-top: #f4efe6;
       --bg-bottom: #d9e6e0;
       --panel: #fffdf8;
@@ -182,6 +183,52 @@
       font-family: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
       color: color-mix(in srgb, var(--accent) 75%, black);
       font-size: 0.9rem;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        color-scheme: dark;
+        --bg-top: #0e171f;
+        --bg-bottom: #10202b;
+        --panel: #16242f;
+        --ink: #e8f1ee;
+        --ink-soft: #9fb1b7;
+        --line: #2b3e4a;
+        --accent: #46bea0;
+        --accent-2: #e39058;
+        --mark: #665124;
+        --shadow: 0 18px 34px rgba(0, 0, 0, 0.45);
+      }
+
+      .hero {
+        background: radial-gradient(circle at 15% 10%, #1c2f3a, #13212b);
+        border-color: #2b3e4a;
+      }
+
+      .controls button:hover {
+        box-shadow: 0 8px 14px rgba(70, 190, 160, 0.26);
+      }
+
+      details.category {
+        background: color-mix(in srgb, var(--panel) 92%, black);
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+      }
+
+      details.category summary {
+        background: linear-gradient(90deg, rgba(70, 190, 160, 0.18), rgba(0, 0, 0, 0));
+      }
+
+      .app-row {
+        background: color-mix(in srgb, var(--panel) 88%, #0b1218);
+      }
+
+      .app-id {
+        color: color-mix(in srgb, var(--accent) 82%, white);
+      }
+
+      .empty {
+        background: color-mix(in srgb, var(--panel) 90%, black);
+      }
     }
 
     mark {
