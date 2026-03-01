@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>UniFi Categorie Browser</title>
+  <style>
+    :root {
+      --bg-top: #f4efe6;
+      --bg-bottom: #d9e6e0;
+      --panel: #fffdf8;
+      --ink: #1d2c2b;
+      --ink-soft: #4f6664;
+      --line: #c4d7d2;
+      --accent: #1f7a68;
+      --accent-2: #ce6d2d;
+      --mark: #ffe1a8;
+      --shadow: 0 18px 34px rgba(29, 44, 43, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "IBM Plex Sans", "Segoe UI", Tahoma, sans-serif;
+      color: var(--ink);
+      background: linear-gradient(150deg, var(--bg-top), var(--bg-bottom));
+      min-height: 100vh;
+    }
+
+    main {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 24px 18px 36px;
+    }
+
+    .hero {
+      background: radial-gradient(circle at 15% 10%, #ffffff, #f4f7f0);
+      border: 1px solid #ffffff;
+      box-shadow: var(--shadow);
+      border-radius: 20px;
+      padding: 20px 20px 18px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-family: "Avenir Next", "Trebuchet MS", sans-serif;
+      font-size: clamp(1.45rem, 2.4vw, 2rem);
+      letter-spacing: 0.02em;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--ink-soft);
+      line-height: 1.45;
+      max-width: 72ch;
+    }
+
+    .controls {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: 1.7fr 1fr auto auto;
+      gap: 10px;
+    }
+
+    .controls input,
+    .controls select,
+    .controls button {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--ink);
+      padding: 11px 12px;
+      font-size: 0.96rem;
+    }
+
+    .controls input:focus,
+    .controls select:focus,
+    .controls button:focus {
+      outline: 2px solid color-mix(in srgb, var(--accent) 58%, white);
+      outline-offset: 1px;
+    }
+
+    .controls button {
+      cursor: pointer;
+      transition: transform 120ms ease, box-shadow 120ms ease;
+      min-width: 112px;
+    }
+
+    .controls button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 14px rgba(31, 122, 104, 0.16);
+    }
+
+    #expand-all {
+      background: color-mix(in srgb, var(--accent) 14%, white);
+      border-color: color-mix(in srgb, var(--accent) 22%, var(--line));
+    }
+
+    #collapse-all {
+      background: color-mix(in srgb, var(--accent-2) 12%, white);
+      border-color: color-mix(in srgb, var(--accent-2) 28%, var(--line));
+    }
+
+    #status {
+      margin: 16px 3px 6px;
+      color: var(--ink-soft);
+      font-size: 0.95rem;
+    }
+
+    .categories {
+      display: grid;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    details.category {
+      background: color-mix(in srgb, white 86%, var(--panel));
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 8px 18px rgba(31, 122, 104, 0.06);
+      opacity: 0;
+      transform: translateY(6px);
+      animation: fade-in 280ms ease forwards;
+    }
+
+    @keyframes fade-in {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    details.category summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 12px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
+      background: linear-gradient(90deg, rgba(31, 122, 104, 0.08), rgba(255, 255, 255, 0));
+    }
+
+    details.category summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .cat-title {
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .cat-count {
+      color: var(--ink-soft);
+      font-size: 0.9rem;
+      white-space: nowrap;
+    }
+
+    .apps {
+      padding: 8px 14px 14px;
+      border-top: 1px dashed var(--line);
+      display: grid;
+      gap: 6px;
+    }
+
+    .app-row {
+      display: grid;
+      grid-template-columns: 100px 1fr;
+      gap: 10px;
+      align-items: baseline;
+      padding: 6px 8px;
+      border-radius: 10px;
+      background: color-mix(in srgb, white 88%, var(--bg-top));
+    }
+
+    .app-id {
+      font-family: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+      color: color-mix(in srgb, var(--accent) 75%, black);
+      font-size: 0.9rem;
+    }
+
+    mark {
+      background: var(--mark);
+      border-radius: 4px;
+      padding: 0 2px;
+    }
+
+    .empty {
+      margin-top: 16px;
+      border: 1px dashed var(--line);
+      border-radius: 14px;
+      background: color-mix(in srgb, white 86%, var(--panel));
+      padding: 16px;
+      color: var(--ink-soft);
+    }
+
+    @media (max-width: 960px) {
+      .controls {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 650px) {
+      main {
+        padding: 14px 12px 22px;
+      }
+
+      .hero {
+        border-radius: 14px;
+        padding: 14px;
+      }
+
+      .controls {
+        grid-template-columns: 1fr;
+      }
+
+      .app-row {
+        grid-template-columns: 88px 1fr;
+        gap: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <h1>UniFi Categorie Browser</h1>
+      <p class="subtitle">
+        Klap categorieën open als dropdown, filter op categorie en zoek direct op app-ID of app-naam.
+      </p>
+      <div class="controls">
+        <input id="search" type="search" placeholder="Zoek app-ID of naam, bijvoorbeeld 65538 of Spotify">
+        <select id="category-filter">
+          <option value="">Alle categorieën</option>
+        </select>
+        <button id="expand-all" type="button">Alles open</button>
+        <button id="collapse-all" type="button">Alles dicht</button>
+      </div>
+    </section>
+
+    <div id="status">Data laden...</div>
+    <section id="categories" class="categories"></section>
+    <div id="empty" class="empty" hidden>Geen resultaten. Probeer een andere zoekterm of categorie.</div>
+  </main>
+
+  <script>
+    const categoryContainer = document.getElementById("categories");
+    const searchInput = document.getElementById("search");
+    const categoryFilter = document.getElementById("category-filter");
+    const statusEl = document.getElementById("status");
+    const emptyEl = document.getElementById("empty");
+    const expandAllBtn = document.getElementById("expand-all");
+    const collapseAllBtn = document.getElementById("collapse-all");
+    const DATA_PATH = "./data/cat_app_data.json";
+
+    const state = {
+      allCategories: [],
+      search: "",
+      categoryId: "",
+      sourceVersion: "",
+      generatedAtUtc: "",
+    };
+
+    function escapeHtml(value) {
+      return value
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function highlight(text, term) {
+      const safe = escapeHtml(text);
+      if (!term) return safe;
+      const lower = text.toLocaleLowerCase();
+      const needle = term.toLocaleLowerCase();
+      const idx = lower.indexOf(needle);
+      if (idx === -1) return safe;
+      const before = escapeHtml(text.slice(0, idx));
+      const match = escapeHtml(text.slice(idx, idx + term.length));
+      const after = escapeHtml(text.slice(idx + term.length));
+      return `${before}<mark>${match}</mark>${after}`;
+    }
+
+    function parseCategoryFilter() {
+      if (!state.categoryId) return null;
+      const parsed = Number(state.categoryId);
+      return Number.isFinite(parsed) ? parsed : null;
+    }
+
+    function renderCategories() {
+      const term = state.search.trim().toLocaleLowerCase();
+      const selectedCategory = parseCategoryFilter();
+      const visible = [];
+      let visibleApps = 0;
+
+      for (const category of state.allCategories) {
+        if (selectedCategory !== null && category.id !== selectedCategory) {
+          continue;
+        }
+
+        if (!term) {
+          visible.push({ ...category, filteredApps: category.apps });
+          visibleApps += category.apps.length;
+          continue;
+        }
+
+        const idMatch = String(category.id).includes(term);
+        const nameMatch = category.name.toLocaleLowerCase().includes(term);
+        const matchedApps = category.apps.filter((app) => {
+          return (
+            String(app.id).includes(term) ||
+            app.name.toLocaleLowerCase().includes(term)
+          );
+        });
+
+        if (matchedApps.length > 0 || idMatch || nameMatch) {
+          const appsToShow = matchedApps.length > 0 ? matchedApps : category.apps;
+          visible.push({ ...category, filteredApps: appsToShow });
+          visibleApps += appsToShow.length;
+        }
+      }
+
+      categoryContainer.innerHTML = "";
+      emptyEl.hidden = visible.length > 0;
+
+      for (const category of visible) {
+        const details = document.createElement("details");
+        details.className = "category";
+        details.open = Boolean(term);
+
+        const summary = document.createElement("summary");
+        const title = document.createElement("span");
+        title.className = "cat-title";
+        title.innerHTML = `${highlight(`Categorie ${category.id}`, term)}: ${highlight(category.name, term)}`;
+
+        const count = document.createElement("span");
+        count.className = "cat-count";
+        count.textContent = `${category.filteredApps.length}/${category.apps.length} apps`;
+
+        summary.appendChild(title);
+        summary.appendChild(count);
+        details.appendChild(summary);
+
+        const appsDiv = document.createElement("div");
+        appsDiv.className = "apps";
+
+        for (const app of category.filteredApps) {
+          const row = document.createElement("div");
+          row.className = "app-row";
+          row.innerHTML = `
+            <span class="app-id">${highlight(String(app.id), term)}</span>
+            <span class="app-name">${highlight(app.name, term)}</span>
+          `;
+          appsDiv.appendChild(row);
+        }
+
+        details.appendChild(appsDiv);
+        categoryContainer.appendChild(details);
+      }
+
+      const meta =
+        state.sourceVersion || state.generatedAtUtc
+          ? ` | bronversie ${state.sourceVersion || "?"}, bijgewerkt ${state.generatedAtUtc || "onbekend"}`
+          : "";
+
+      statusEl.textContent =
+        `Toont ${visible.length} categorieën en ${visibleApps} apps ` +
+        `(totaal: ${state.allCategories.length} categorieën).${meta}`;
+    }
+
+    function fillCategoryFilter(categories) {
+      const current = categoryFilter.value;
+      categoryFilter.innerHTML = '<option value="">Alle categorieën</option>';
+      for (const category of categories) {
+        const option = document.createElement("option");
+        option.value = String(category.id);
+        option.textContent = `${category.id} - ${category.name}`;
+        categoryFilter.appendChild(option);
+      }
+      categoryFilter.value = current;
+    }
+
+    async function loadData() {
+      statusEl.textContent = "Data laden...";
+      try {
+        const response = await fetch(DATA_PATH);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        const payload = await response.json();
+        state.allCategories = payload.categories;
+        state.sourceVersion = payload.version || "";
+        state.generatedAtUtc = payload.generated_at_utc || "";
+        fillCategoryFilter(state.allCategories);
+        renderCategories();
+      } catch (err) {
+        categoryContainer.innerHTML = "";
+        emptyEl.hidden = true;
+        statusEl.textContent =
+          `Kon data niet laden: ${err.message}. Zorg dat ${DATA_PATH} bestaat in je repo.`;
+      }
+    }
+
+    searchInput.addEventListener("input", () => {
+      state.search = searchInput.value;
+      renderCategories();
+    });
+
+    categoryFilter.addEventListener("change", () => {
+      state.categoryId = categoryFilter.value;
+      renderCategories();
+    });
+
+    expandAllBtn.addEventListener("click", () => {
+      for (const details of categoryContainer.querySelectorAll("details.category")) {
+        details.open = true;
+      }
+    });
+
+    collapseAllBtn.addEventListener("click", () => {
+      for (const details of categoryContainer.querySelectorAll("details.category")) {
+        details.open = false;
+      }
+    });
+
+    loadData();
+  </script>
+</body>
+</html>
